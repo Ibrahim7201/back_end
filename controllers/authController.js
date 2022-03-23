@@ -6,13 +6,13 @@ dotenv.config({ path: '../config.env' });
 const { promisify } = require('util');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
-const signToken = id => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const signToken = (id, isAdmin) => {
+  return jwt.sign({ id, isAdmin }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
   });
 };
 const sendToken = (user, statusCode, res) => {
-  const token = signToken(user._id, user.role);
+  const token = signToken(user._id, user.role === 'admin' ? true : false);
   const cookieOption = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
