@@ -88,3 +88,11 @@ exports.getProductsBySubCategory = async (req, res, next) => {
     next(new AppError(`Error in getting products by sub-category`, 422));
   }
 };
+exports.editSubCategory = async (req, res, next) => {
+  try {
+    const { name } = req.params;
+    const oldSubCg = await SubCategory.findOne({ name }).populate('variants');
+    let { variants } = oldSubCg;
+    const { newName, photo, newVariants } = req.body;
+  } catch (err) {}
+};

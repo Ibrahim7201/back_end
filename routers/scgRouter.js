@@ -13,6 +13,11 @@ scgRouter
     authController.protect,
     authController.restrictTo('admin'),
     scgController.getProductsBySubCategory
+  )
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin'),
+    scgController.editSubCategory
   );
 
 module.exports = scgRouter;

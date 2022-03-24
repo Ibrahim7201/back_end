@@ -122,7 +122,7 @@ exports.login = async (req, res, next) => {
         Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
       ),
     });
-    // console.log(req.cookies);
+    await User.findOneAndUpdate({ _id: user._id }, { isActive: true });
     sendToken(user, 201, res);
   } catch (err) {
     next(new AppError('Error in Loging in', 404));
@@ -138,7 +138,7 @@ exports.logout = async (req, res, next) => {
     res.cookie('name', 'Logged-out', {
       expires: new Date(Date.now() - 1000000),
     });
-
+    await User.findOneAndUpdate({ _id: req.user._id }, { isActive: false });
     res.json('You are logged out');
   } catch (err) {
     next(new AppError(`Can't LogOut`, 505));

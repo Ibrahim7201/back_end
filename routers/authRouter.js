@@ -6,7 +6,7 @@ authRouter
   .route('/')
   .put(authController.login)
   .post(authController.signup)
-  .delete(authController.logout)
+  .delete(authController.protect, authController.logout)
   .get(authController.forgetPassword)
   .patch(authController.protect, authController.updatePassword);
 

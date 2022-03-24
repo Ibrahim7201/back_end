@@ -2,6 +2,7 @@ const express = require('express');
 const cgRouter = express.Router();
 const cgController = require('../controllers/cgController');
 const authController = require('../controllers/authController');
+
 cgRouter
   .route('/:name?')
   .post(
@@ -9,6 +10,11 @@ cgRouter
     authController.restrictTo('admin'),
     cgController.addCategory
   )
-  .get(cgController.getCategory);
-
+  .get(cgController.getCategory)
+  .put(cgController.getAllCategories)
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin'),
+    cgController.editCategory
+  );
 module.exports = cgRouter;
