@@ -3,6 +3,7 @@ const Category = require('../models/categoriesModel');
 const Product = require('../models/productsModel');
 const Discount = require('../models/discountModel');
 const Variant = require('../models/variantModel');
+const _ = require('lodash');
 const AppError = require('../utils/appError');
 
 exports.addSubCategory = async (req, res, next) => {
@@ -91,8 +92,33 @@ exports.getProductsBySubCategory = async (req, res, next) => {
 exports.editSubCategory = async (req, res, next) => {
   try {
     const { name } = req.params;
-    const oldSubCg = await SubCategory.findOne({ name }).populate('variants');
+    const oldSubCg = await SubCategory.findOne({ name }).populate(
+      'variants',
+      'name options -_id'
+    );
     let { variants } = oldSubCg;
     const { newName, photo, newVariants } = req.body;
-  } catch (err) {}
+    for (let i in newVariants) {
+      if (_.some(variants, newVariants[i])) continue;
+      const v = await Variant.create({
+        name: newVariants[i].name,
+        options: newVariants[i].options,
+      });
+      await SubCategory.findOneAndUpdate(
+        { name },
+        { $push: { variants: v._id } }
+      );
+    }
+    await SubCategory.findOneAndUpdate({ name }, { name: newName, photo });
+    const sg = await SubCategory.findOne({ name });
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'SubCategory Edited',
+        SubCategory: sg,
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in Editing Sub Category`, 422));
+  }
 };

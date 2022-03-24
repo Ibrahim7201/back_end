@@ -17,6 +17,8 @@ const revRouter = require('./routers/reviewRouter');
 const cartRouter = require('./routers/cartRouter');
 const variantRouter = require('./routers/variantRouter');
 const orderRouter = require('./routers/orderRouter');
+const userRouter = require('./routers/userRouter');
+const vendorRouter = require('./routers/vendorRouter');
 const globalError = require('./controllers/errorContoller');
 dotenv.config({ path: './config.env' });
 
@@ -52,6 +54,8 @@ app.use('/review', revRouter);
 app.use('/cart', cartRouter);
 app.use('/variant', variantRouter);
 app.use('/order', orderRouter);
+app.use('/user', userRouter);
+app.use('/vendor', vendorRouter);
 
 app.use(globalError);
 app.listen(port, () => {

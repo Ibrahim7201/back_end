@@ -85,6 +85,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
   },
   userSchemaOptions
 );

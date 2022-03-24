@@ -43,7 +43,6 @@ exports.protect = async (req, res, next) => {
     ) {
       token = req.headers.authorization.split(' ')[1];
     } else if (req.cookies.jwt) {
-      console.log(req.cookies.jwt);
       token = req.cookies.jwt;
     }
     if (!token) {
@@ -116,6 +115,7 @@ exports.login = async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password))) {
       return next(new AppError('Incorrect Password or email', 400));
     }
+    if (user.isBanned) return next(new AppError(`You are Banned`, 422));
     const userName = user.name.toString();
     res.cookie('name', userName, {
       expires: new Date(
