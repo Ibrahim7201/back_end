@@ -10,6 +10,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: 'No Description Added yet',
     },
+    photo: { type: String },
     dateAdded: {
       type: Date,
       default: Date.now(),
@@ -42,6 +43,10 @@ const productSchema = new mongoose.Schema(
     reviews: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Review',
+    },
+    isAccepted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

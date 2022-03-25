@@ -21,6 +21,7 @@ const orderRouter = require('./routers/orderRouter');
 const userRouter = require('./routers/userRouter');
 const vendorRouter = require('./routers/vendorRouter');
 const meRouter = require('./routers/meRouter');
+const utilsRouter = require('./routers/utilsRouter');
 const globalError = require('./controllers/errorContoller');
 
 main();
@@ -59,6 +60,7 @@ app.use('/order', orderRouter);
 app.use('/user', userRouter);
 app.use('/vendor', vendorRouter);
 app.use('/me', meRouter);
+app.use('/utils', utilsRouter);
 
 app.use(globalError);
 app.listen(port, () => {

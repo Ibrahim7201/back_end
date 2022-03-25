@@ -6,19 +6,24 @@ prodRouter
   .route('/:name?')
   .post(
     authController.protect,
-    authController.restrictTo('vendor'),
+    authController.restrictTo('vendor', 'admin'),
     productController.addProduct
   )
   .get(authController.protect, productController.getProductByName)
   .put(
     authController.protect,
-    authController.restrictTo('vendor'),
+    authController.restrictTo('vendor', 'admin'),
     productController.addInStock
   )
   .delete(
     authController.protect,
-    authController.restrictTo('vendor'),
+    authController.restrictTo('vendor', 'admin'),
     productController.removeProductsFromStock
+  )
+  .patch(
+    authController.protect,
+    authController.restrictTo('admin'),
+    productController.acceptOrder
   );
 
 module.exports = prodRouter;

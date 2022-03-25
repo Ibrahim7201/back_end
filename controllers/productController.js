@@ -6,11 +6,13 @@ const AppError = require('../utils/appError');
 
 exports.addProduct = async (req, res, next) => {
   try {
-    const { name, description, price, category, subCategory, stock } = req.body;
+    const { name, description, photo, price, category, subCategory, stock } =
+      req.body;
     const cat = await Category.findOne({ name: category });
     const subcat = await SubCategory.findOne({ name: subCategory });
     const product = await Product.create({
       name,
+      photo,
       description,
       price,
       stock,
@@ -113,5 +115,24 @@ exports.removeProductsFromStock = async (req, res, next) => {
     });
   } catch (err) {
     next(new AppError(`Error in removing from stock`, 422));
+  }
+};
+
+exports.acceptOrder = async (req, res, next) => {
+  try {
+    const { _id } = req.body;
+    const product = await Product.findOneAndUpdate(
+      { _id },
+      { isAccepted: true }
+    );
+    if (!product) return next(new AppError(`Product doesn't exist`, 422));
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'Product Accepted',
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in Accepting Order`, 422));
   }
 };
