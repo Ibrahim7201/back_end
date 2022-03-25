@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const User = require('../models/userModel');
+const cloudinary = require('../utils/cloudinary');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config({ path: '../config.env' });
@@ -68,7 +69,6 @@ exports.signup = async (req, res, next) => {
   try {
     const {
       name,
-      image,
       password,
       email,
       passwordConfirmation,
@@ -80,7 +80,6 @@ exports.signup = async (req, res, next) => {
     if (user[0]) next(new AppError('User Exists', 422));
     const newUser = await User.create({
       name,
-      image,
       password,
       email,
       passwordConfirmation,
@@ -224,17 +223,35 @@ exports.resetPassword = async (req, res, next) => {
 
 exports.updatePassword = async (req, res, next) => {
   try {
+    const { password, passwordConfirmation } = req.body;
     const user = await User.findById(req.user._id).select('+password');
     if (
       !(await user.correctPassword(req.body.currentPassword, user.password))
     ) {
       return next(new AppError(`Your current password is wrong!`, 401));
     }
-    user.password = req.body.password;
-    user.passwordConfirmation = req.body.passwordConfirmation;
-    await user.save();
+    if (password !== passwordConfirmation)
+      return next(new AppError(`Passwords don't match`, 422));
+    await User.findOneAndUpdate(
+      { _id: req.user._id },
+      { password, passwordConfirmation }
+    );
     sendToken(user, 200, res);
   } catch (err) {
+    console.log(err);
     next(new AppError(`Error in updating password`, 422));
+  }
+};
+exports.uploadImage = async function (req, res, next) {
+  try {
+    cloudinary.uploader.upload(req.file.path, function (err, result) {
+      console.log('Error: ', err);
+      console.log('Result: ', result);
+      res.json(result.url);
+    });
+  } catch (err) {
+    err.statusCode = 404;
+    err.code = 'Error in uploading img';
+    next(err);
   }
 };

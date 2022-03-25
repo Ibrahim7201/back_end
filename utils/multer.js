@@ -13,7 +13,6 @@ const multerFilter = (req, file, cb) => {
     cb(new Error("It's not an IMAGE !", 400), false);
   }
 };
-
 const upload = multer({
   storage: multerStorage,
   fileFlter: multerFilter,
