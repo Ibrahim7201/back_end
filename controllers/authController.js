@@ -1,11 +1,13 @@
 const crypto = require('crypto');
 const User = require('../models/userModel');
+const Cart = require('../models/cartModel');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config({ path: '../config.env' });
 const { promisify } = require('util');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
+const Vendor = require('../models/vendorModel');
 const signToken = (id, isAdmin) => {
   return jwt.sign({ id, isAdmin }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
@@ -51,13 +53,18 @@ exports.protect = async (req, res, next) => {
     const payLoad = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
     const freshUser = await User.findById(payLoad.id);
-    if (!freshUser) {
+    const freshVendor = await Vendor.findById(payLoad.id);
+    if (!freshUser && !freshVendor) {
       return next('User belongs to this token no longer exists');
     }
-    if (freshUser.changedPasswordAfter(payLoad.iat)) {
+    if (
+      freshUser.changedPasswordAfter(payLoad.iat) ||
+      freshVendor.changedPasswordAfter(payLoad.iat)
+    ) {
       return next(`User changed password after the token was issued`);
     }
-    req.user = freshUser;
+    if (freshUser) req.user = freshUser;
+    if (freshVendor) req.user = freshVendor;
     next();
   } catch (err) {
     next(new AppError(`Error in Authentication`, 404));
@@ -75,23 +82,43 @@ exports.signup = async (req, res, next) => {
       role,
       phones,
     } = req.body;
-    const user = await User.find({ email });
-    if (user[0]) next(new AppError('User Exists', 422));
-    const newUser = await User.create({
-      name,
-      password,
-      email,
-      passwordConfirmation,
-      passwordChangedAt,
-      role,
-      phones,
-    });
-    await res.cookie('name', newUser.name.toString(), {
+    let toBeSend;
+    const cart = await Cart.create({});
+    if (role === 'vendor') {
+      const vendor = await Vendor.find({ email });
+      if (vendor[0]) next(new AppError('Vendor Exists', 422));
+      const cart = await Cart.create({});
+      toBeSend = await Vendor.create({
+        name,
+        password,
+        email,
+        passwordConfirmation,
+        passwordChangedAt,
+        role,
+        phones,
+        cartId: cart._id,
+      });
+    } else if (role === 'user') {
+      const user = await User.find({ email });
+      if (user[0]) next(new AppError('User Exists', 422));
+      toBeSend = await User.create({
+        name,
+        password,
+        email,
+        passwordConfirmation,
+        passwordChangedAt,
+        role,
+        phones,
+        cartId: cart._id,
+      });
+    }
+    await Cart.findOneAndUpdate({ _id: cart._id }, { userId: toBeSend._id });
+    await res.cookie('name', toBeSend.name.toString(), {
       expires: new Date(
         Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
       ),
     });
-    sendToken(newUser, 201, res);
+    sendToken(toBeSend, 201, res);
   } catch (err) {
     next(new AppError(`Error in Signing Up`, 404));
   }
@@ -106,22 +133,39 @@ exports.login = async (req, res, next) => {
         message: 'Invalid Inputs!',
       });
     }
-    const user = await User.findOne({
-      email,
-    }).select('+password');
-
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return next(new AppError('Incorrect Password or email', 400));
+    const user = await User.findOne({ email }).select('+password');
+    const vendor = await Vendor.findOne({ email }).select('+password');
+    if (user) {
+      if (!user || !(await user.correctPassword(password, user.password))) {
+        return next(new AppError('Incorrect Password or email', 400));
+      }
+      if (user.isBanned) return next(new AppError(`You are Banned`, 422));
+      const userName = user.name.toString();
+      res.cookie('name', userName, {
+        expires: new Date(
+          Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
+        ),
+      });
+      await User.findOneAndUpdate({ _id: user._id }, { isActive: true });
+      sendToken(user, 201, res);
     }
-    if (user.isBanned) return next(new AppError(`You are Banned`, 422));
-    const userName = user.name.toString();
-    res.cookie('name', userName, {
-      expires: new Date(
-        Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
-      ),
-    });
-    await User.findOneAndUpdate({ _id: user._id }, { isActive: true });
-    sendToken(user, 201, res);
+    if (vendor) {
+      if (
+        !vendor ||
+        !(await vendor.correctPassword(password, vendor.password))
+      ) {
+        return next(new AppError('Incorrect Password or email', 400));
+      }
+      if (vendor.isBanned) return next(new AppError(`You are Banned`, 422));
+      const userName = vendor.name.toString();
+      res.cookie('name', userName, {
+        expires: new Date(
+          Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000
+        ),
+      });
+      await Vendor.findOneAndUpdate({ _id: vendor._id }, { isActive: true });
+      sendToken(vendor, 201, res);
+    }
   } catch (err) {
     next(new AppError('Error in Loging in', 404));
   }
@@ -136,7 +180,11 @@ exports.logout = async (req, res, next) => {
     res.cookie('name', 'Logged-out', {
       expires: new Date(Date.now() - 1000000),
     });
-    await User.findOneAndUpdate({ _id: req.user._id }, { isActive: false });
+    if (req.user.role === 'vendor') {
+      await Vendor.findOneAndUpdate({ _id: req.user._id }, { isActive: false });
+    } else if (req.user.role === 'user') {
+      await User.findOneAndUpdate({ _id: req.user._id }, { isActive: false });
+    }
     res.json('You are logged out');
   } catch (err) {
     next(new AppError(`Can't LogOut`, 505));
@@ -200,17 +248,32 @@ exports.resetPassword = async (req, res, next) => {
       .createHash('sha256')
       .update(req.params.token)
       .digest('hex');
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
-    });
-    if (!user) return next(new AppError(`Token has expired!`, 400));
-    user.password = req.body.password;
-    user.passwordConfirmation = req.body.passwordConfirmation;
-    user.passwordResetExpires = undefined;
-    user.passwordResetToken = undefined;
-    await user.save();
-    const token = signToken(user._id);
+    let token;
+    if (req.user.role === 'vendor') {
+      const vendor = await Vendor.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
+      });
+      if (!vendor) return next(new AppError(`Token has expired!`, 400));
+      vendor.password = req.body.password;
+      vendor.passwordConfirmation = req.body.passwordConfirmation;
+      vendor.passwordResetExpires = undefined;
+      vendor.passwordResetToken = undefined;
+      await vendor.save();
+      token = signToken(vendor._id);
+    } else if (req.user.role === 'user') {
+      const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
+      });
+      if (!user) return next(new AppError(`Token has expired!`, 400));
+      user.password = req.body.password;
+      user.passwordConfirmation = req.body.passwordConfirmation;
+      user.passwordResetExpires = undefined;
+      user.passwordResetToken = undefined;
+      await user.save();
+      token = signToken(user._id);
+    }
     res.status(200).json({
       status: 'success',
       token,
@@ -224,18 +287,37 @@ exports.updatePassword = async (req, res, next) => {
   try {
     const { password, passwordConfirmation } = req.body;
     const user = await User.findById(req.user._id).select('+password');
-    if (
-      !(await user.correctPassword(req.body.currentPassword, user.password))
-    ) {
-      return next(new AppError(`Your current password is wrong!`, 401));
+    const vendor = await Vendor.findById(req.user._id).select('+password');
+    if (vendor) {
+      if (
+        !(await vendor.correctPassword(
+          req.body.currentPassword,
+          vendor.password
+        ))
+      ) {
+        return next(new AppError(`Your current password is wrong!`, 401));
+      }
+      if (password !== passwordConfirmation)
+        return next(new AppError(`Passwords don't match`, 422));
+      await Vendor.findOneAndUpdate(
+        { _id: req.user._id },
+        { password, passwordConfirmation }
+      );
+      sendToken(vendor, 200, res);
+    } else if (user) {
+      if (
+        !(await user.correctPassword(req.body.currentPassword, user.password))
+      ) {
+        return next(new AppError(`Your current password is wrong!`, 401));
+      }
+      if (password !== passwordConfirmation)
+        return next(new AppError(`Passwords don't match`, 422));
+      await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { password, passwordConfirmation }
+      );
+      sendToken(user, 200, res);
     }
-    if (password !== passwordConfirmation)
-      return next(new AppError(`Passwords don't match`, 422));
-    await User.findOneAndUpdate(
-      { _id: req.user._id },
-      { password, passwordConfirmation }
-    );
-    sendToken(user, 200, res);
   } catch (err) {
     console.log(err);
     next(new AppError(`Error in updating password`, 422));

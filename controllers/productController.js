@@ -2,26 +2,55 @@ const Product = require('../models/productsModel');
 const Category = require('../models/categoriesModel');
 const SubCategory = require('../models/subCategoriesModel');
 const Discount = require('../models/discountModel');
+const Vendor = require('../models/vendorModel');
+const Notification = require('../models/notificationModel');
 const AppError = require('../utils/appError');
 
 exports.addProduct = async (req, res, next) => {
   try {
-    const { name, description, photo, price, category, subCategory, stock } =
-      req.body;
+    const {
+      name,
+      description,
+      photo,
+      price,
+      category,
+      subCategory,
+      stock,
+      specs,
+    } = req.body;
     const cat = await Category.findOne({ name: category });
     const subcat = await SubCategory.findOne({ name: subCategory });
+    let vendorName;
+    if (req.user.role === 'vendor') {
+      vendorName = req.user.name;
+    } else {
+      vendorName = 'JUMIA';
+    }
     const product = await Product.create({
       name,
       photo,
       description,
       price,
       stock,
+      specs,
       category: cat._id,
       subCategory: subcat._id,
+      vendorName,
+      vendorId: req.user._id,
     });
+    if (req.user.role === 'vendor')
+      await Vendor.findOneAndUpdate(
+        { _id: req.user._id },
+        { $push: { products: product._id } }
+      );
     let { products } = subcat;
     products.push(product._id);
     await SubCategory.findOneAndUpdate({ name: subCategory }, { products });
+    const admin = await User.findOne({ role: 'admin' });
+    const notification = await Notification.create({
+      userId: admin._id,
+      content: `${product.name} has been added by ${req.user.name}`,
+    });
     res.status(201).json({
       status: 'success',
       data: {
@@ -118,7 +147,7 @@ exports.removeProductsFromStock = async (req, res, next) => {
   }
 };
 
-exports.acceptOrder = async (req, res, next) => {
+exports.acceptProduct = async (req, res, next) => {
   try {
     const { _id } = req.body;
     const product = await Product.findOneAndUpdate(

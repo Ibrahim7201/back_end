@@ -65,7 +65,7 @@ exports.queryUsersByMail = async (req, res, next) => {
   try {
     const { email } = req.query;
     const user = await User.findOne({ email });
-    if (!user || user.role === 'vendor' || user.role === 'admin')
+    if (!user || user.role === 'admin')
       return next(new AppError(`User Not Found`, 422));
     res.status(201).json({
       status: 'success',

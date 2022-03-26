@@ -23,7 +23,7 @@ exports.addVariant = async (req, res, next) => {
 
 exports.showVariants = async (req, res, next) => {
   try {
-    const { subCategory } = req.body;
+    const { subCategory } = req.params;
     const scg = await SubCategory.findOne({ name: subCategory }).populate(
       'variants'
     );

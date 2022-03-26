@@ -15,6 +15,14 @@ const productSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    vendorName: {
+      type: String,
+      required: true,
+    },
+    vendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
@@ -33,13 +41,23 @@ const productSchema = new mongoose.Schema(
       default: '62390e4391a93ebde0ec2c0f',
     },
     stock: {
-      options: { type: [String] },
-      available: { type: Number },
+      type: Number,
+      default: 0,
     },
-    variants: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: 'Variant',
+    sold: {
+      type: Number,
+      default: 0,
     },
+    specs: [
+      {
+        name: {
+          type: String,
+        },
+        value: {
+          type: String,
+        },
+      },
+    ],
     reviews: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Review',

@@ -2,14 +2,13 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
-const joi = require('joi');
 dotenv.config({ path: '../config.env' });
-const userSchemaOptions = {
+const vendorSchemaOptions = {
   toJSON: {
     virtuals: true,
   },
 };
-const userSchema = new mongoose.Schema(
+const vendorSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -62,8 +61,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['user'],
-      default: 'user',
+      enum: ['vendor'],
+      default: 'vendor',
     },
     photo: {
       type: String,
@@ -77,6 +76,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    products: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Product',
+    },
     orders: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Order',
@@ -89,19 +92,16 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    cartId: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
   },
-  userSchemaOptions
+  vendorSchemaOptions
 );
 
-userSchema.pre('save', function (next) {
+vendorSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });
-userSchema.pre('save', async function (next) {
+vendorSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -110,14 +110,14 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-userSchema.methods.correctPassword = async function (
+vendorSchema.methods.correctPassword = async function (
   enteredPassword,
   userPassword
 ) {
   return await bcrypt.compare(enteredPassword, userPassword);
 };
 
-userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
+vendorSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -129,7 +129,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
   return false;
 };
 
-userSchema.methods.createPasswordResetToken = function () {
+vendorSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto
     .createHash('sha256')
@@ -139,6 +139,6 @@ userSchema.methods.createPasswordResetToken = function () {
   return resetToken;
 };
 
-const User = mongoose.model('User', userSchema);
+const Vendor = mongoose.model('Vendor', vendorSchema);
 
-module.exports = User;
+module.exports = Vendor;

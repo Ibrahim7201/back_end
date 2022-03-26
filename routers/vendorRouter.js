@@ -5,11 +5,7 @@ const authController = require('../controllers/authController');
 
 vendorRouter
   .route('/:id?')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    vendorController.getAllVendors
-  )
+  .get(authController.protect, vendorController.viewPendingOrders)
   .put(
     authController.protect,
     authController.restrictTo('admin'),
@@ -20,6 +16,6 @@ vendorRouter
     authController.restrictTo('admin'),
     vendorController.toggleBanVendor
   )
-  .patch(authController.protect, vendorController.viewBannedVendors)
+  .patch(authController.protect, vendorController.acceptOrder)
   .post(authController.protect, vendorController.queryVendorsByMail);
 module.exports = vendorRouter;

@@ -8,6 +8,7 @@ const orderSchema = new mongoose.Schema(
     },
     userId: { type: mongoose.Schema.Types.ObjectId },
     vendorId: { type: mongoose.Schema.Types.ObjectId },
+    vendorName: { type: String },
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -16,7 +17,7 @@ const orderSchema = new mongoose.Schema(
       type: [mongoose.Schema.Types.ObjectId],
     },
     status: {
-      isOnWay: { type: Boolean, default: true },
+      isOnWay: { type: Boolean, default: false },
       isPaid: { type: Boolean, default: false },
       isCashOnDelivery: { type: Boolean, default: false },
       isDelivered: { type: Boolean, default: false },

@@ -5,6 +5,7 @@ const authController = require('../controllers/authController');
 cartRouter
   .route('/')
   .post(authController.protect, cartController.addToCart)
-  .get(authController.protect, cartController.getCartData);
+  .get(authController.protect, cartController.getCartData)
+  .delete(authController.protect, cartController.removeFromCart);
 
 module.exports = cartRouter;

@@ -2,21 +2,23 @@ const mongoose = require('mongoose');
 const cartSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    required: [true, `Please login first`],
+    ref: 'User',
   },
   items: [
     {
+      vendorName: { type: String },
+      vendorId: { type: mongoose.Schema.Types.ObjectId },
       productId: {
         type: mongoose.Schema.Types.ObjectId,
       },
-      name: String,
+      name: { type: String },
       quantity: {
         type: Number,
         required: true,
         min: [1, 'Quantity can not be less then 1.'],
         default: 1,
       },
-      price: Number,
+      price: { type: Number },
     },
   ],
 });

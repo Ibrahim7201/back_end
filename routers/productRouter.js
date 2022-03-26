@@ -23,7 +23,7 @@ prodRouter
   .patch(
     authController.protect,
     authController.restrictTo('admin'),
-    productController.acceptOrder
+    productController.acceptProduct
   );
 
 module.exports = prodRouter;

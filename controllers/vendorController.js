@@ -1,8 +1,9 @@
-const User = require('../models/userModel');
-
+const Vendor = require('../models/vendorModel');
+const Order = require('../models/orderModel');
+const AppError = require('../utils/appError');
 exports.getAllVendors = async (req, res, next) => {
   try {
-    const vendors = await User.find({ role: 'vendor' });
+    const vendors = await Vendor.find({});
     res.status(201).json({
       status: 'success',
       data: {
@@ -17,7 +18,7 @@ exports.getAllVendors = async (req, res, next) => {
 exports.getCertainVendor = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id)
+    const vendor = await Vendor.findById(id)
       .populate('orders')
       .populate({
         path: 'orders',
@@ -26,12 +27,12 @@ exports.getCertainVendor = async (req, res, next) => {
           model: 'Product',
         },
       });
-    if (!user) return next(new AppError(`Vendor doesn't exist`, 422));
+    if (!vendor) return next(new AppError(`Vendor doesn't exist`, 422));
     res.status(201).json({
       status: 'success',
       data: {
         status: 'Vendor is here',
-        user,
+        vendor,
       },
     });
   } catch (err) {
@@ -41,16 +42,16 @@ exports.getCertainVendor = async (req, res, next) => {
 exports.toggleBanVendor = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
-    await User.findByIdAndUpdate(id, {
-      isBanned: !user.isBanned,
+    const vendor = await Vendor.findById(id);
+    await Vendor.findByIdAndUpdate(id, {
+      isBanned: !vendor.isBanned,
     });
-    const newUser = await User.findById(id);
+    const newVendor = await Vendor.findById(id);
     res.status(201).json({
       status: 'success',
       data: {
-        status: newUser.isBanned ? 'Vendor Banned' : 'Vendor Unbanned',
-        user: newUser,
+        status: newVendor.isBanned ? 'Vendor Banned' : 'Vendor Unbanned',
+        vendor: newVendor,
       },
     });
   } catch (err) {
@@ -59,9 +60,8 @@ exports.toggleBanVendor = async (req, res, next) => {
 };
 exports.viewBannedVendors = async (req, res, next) => {
   try {
-    const banned = await User.find({ isBanned: true })
-      .where('role')
-      .equals('vendor');
+    const banned = await Vendor.find({ isBanned: true });
+
     res.status(201).json({
       status: 'success',
       data: {
@@ -76,14 +76,52 @@ exports.viewBannedVendors = async (req, res, next) => {
 exports.queryVendorsByMail = async (req, res, next) => {
   try {
     const { email } = req.query;
-    const user = await User.findOne({ email });
-    if (!user || user.role === 'user' || user.role === 'admin')
-      return next(new AppError(`Vendor Not Found`, 422));
+    const vendor = await Vendor.findOne({ email });
+    if (!vendor) return next(new AppError(`Vendor Not Found`, 422));
     res.status(201).json({
       status: 'success',
-      data: { status: 'Vendor found', user },
+      data: { status: 'Vendor found', vendor },
     });
   } catch (err) {
     next(new AppError(`Error in finding Vendor`, 422));
+  }
+};
+exports.acceptOrder = async (req, res, next) => {
+  try {
+    const { _id } = req.body;
+    const order = await Order.findById(_id);
+    if (!order) return next(new AppError(`Order doesn't exist`, 422));
+    if (order.status.isOnWay !== true)
+      return next(new AppError(`Order already On way`, 422));
+    await Order.findByIdAndUpdate(id, {
+      $set: { 'status.isOnWay': true },
+    });
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'Order Accepted',
+        order,
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in accepting Order`, 422));
+  }
+};
+
+exports.viewPendingOrders = async (req, res, next) => {
+  try {
+    const pending = await Order.find({
+      vendorId: req.user._id,
+      'status.isOnWay': false,
+    });
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'Pending Orders are here',
+        pending,
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in getting pending Orders`, 422));
   }
 };
