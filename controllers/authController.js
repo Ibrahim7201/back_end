@@ -25,7 +25,6 @@ const sendToken = (user, statusCode, res) => {
     cookieOption.secure = true;
   }
   res.cookie('jwt', token, cookieOption);
-
   user.password = undefined;
   res.status(statusCode).json({
     status: 'success',
@@ -135,6 +134,7 @@ exports.login = async (req, res, next) => {
     }
     const user = await User.findOne({ email }).select('+password');
     const vendor = await Vendor.findOne({ email }).select('+password');
+    if (!user && !vendor) return next(new AppError(`User not found`, 422));
     if (user) {
       if (!user || !(await user.correctPassword(password, user.password))) {
         return next(new AppError('Incorrect Password or email', 400));
