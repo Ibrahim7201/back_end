@@ -3,7 +3,7 @@ const variantRouter = express.Router();
 const variantController = require('../controllers/variantController');
 const authController = require('../controllers/authController');
 variantRouter
-  .route('/')
+  .route('/:subCategory?')
   .post(authController.protect, variantController.addVariant)
   .get(authController.protect, variantController.showVariants);
 
