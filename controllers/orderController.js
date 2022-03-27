@@ -6,8 +6,8 @@ const AppError = require('../utils/appError');
 
 exports.newOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, vendorId, vendorName, products, paymentMethod } =
-      req.body;
+    const { shippingAddress, orderItem, paymentMethod } = req.body;
+
     const order = await Order.create({
       paymentMethod,
       shippingAddress,

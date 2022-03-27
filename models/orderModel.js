@@ -12,7 +12,7 @@ const orderSchema = new mongoose.Schema(
       default: 'cashondelivery',
     },
     userId: { type: mongoose.Schema.Types.ObjectId },
-    orderItem: {
+    orderItems: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'OrderItem',
     },

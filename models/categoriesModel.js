@@ -4,6 +4,9 @@ const cgSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  mainCategory: {
+    type: String,
+  },
   photo: {
     type: String,
     required: true,

@@ -3,10 +3,11 @@ const SubCategory = require('../models/subCategoriesModel');
 const AppError = require('../utils/appError');
 exports.addCategory = async (req, res, next) => {
   try {
-    const { name, photo } = req.body;
+    const { name, photo, mainCategory } = req.body;
     const category = await Category.create({
       name,
       photo,
+      mainCategory,
     });
     res.status(201).json({
       status: 'success',
@@ -56,10 +57,10 @@ exports.getAllCategories = async (req, res, next) => {
 exports.editCategory = async (req, res, next) => {
   try {
     const { name } = req.params;
-    const { newName, photo } = req.body;
+    const { newName, photo, mainCategory } = req.body;
     const cat = await Category.findOneAndUpdate(
       { name },
-      { name: newName, photo }
+      { name: newName, photo, mainCategory }
     );
     if (!cat) return next(new AppError(`There is no such category`, 422));
     const newCategory = await Category.findOne({ name: newName });
@@ -74,4 +75,3 @@ exports.editCategory = async (req, res, next) => {
     next(new AppError(`Error in editing category`, 422));
   }
 };
-
