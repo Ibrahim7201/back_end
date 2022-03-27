@@ -11,7 +11,10 @@ const orderSchema = new mongoose.Schema(
       enum: ['cashondelivery', 'paypal'],
       default: 'cashondelivery',
     },
-    userId: { type: mongoose.Schema.Types.ObjectId },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     orderItems: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'OrderItem',

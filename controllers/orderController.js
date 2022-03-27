@@ -6,43 +6,76 @@ const AppError = require('../utils/appError');
 
 exports.newOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, orderItem, paymentMethod } = req.body;
-
-    const order = await Order.create({
-      paymentMethod,
-      shippingAddress,
-      vendorId,
-      vendorName,
-      products,
-      userId: req.user._id,
-    });
-    await User.findOneAndUpdate(
-      { _id: req.user._id },
-      { $push: { orders: order._id } }
-    );
-    products.forEach(async id => {
+    const { shippingAddress, productId, paymentMethod, quantity } = req.body;
+    if (req.orderItems) {
+      const orderItems = req.orderItems.map(el => {
+        return {
+          productId: el.productId,
+          quantity: el.quantity,
+          price: el.price,
+        };
+      });
+      const order = await Order.create({
+        paymentMethod,
+        shippingAddress,
+        userId: req.user._id,
+        orderItems,
+      });
+      orderItems.forEach(async item => {
+        const product = await Product.findById(item.productId);
+        await Product.findOneAndUpdate(
+          { _id: item.productId },
+          { $inc: { stock: -+item.quantity, sold: +item.quantity } }
+        );
+        await Order.findOneAndUpdate(
+          { _id: order._id },
+          { $push: { billRaw: item.price } }
+        );
+        await Notification.create({
+          userId: product.vendorId,
+          content: `${
+            product.vendorName !== 'JUMIA' ? req.user.name : product.vendorName
+          } has ordered ${product.name}`,
+        });
+      });
+    } else {
+      const product = await Product.findById(productId).populate('discount');
+      if (!product) return next(new AppError(`Product Not Found`, 422));
+      const orderItem = {
+        productId,
+        quantity,
+        price: product.currentPrice,
+      };
+      const order = await Order.create({
+        paymentMethod,
+        shippingAddress,
+        userId: req.user._id,
+        orderItems: [orderItem],
+      });
+      await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { $push: { orders: order._id } }
+      );
       const { currentPrice } = await Product.findById(id).populate('discount');
-      const product = await Product.findOneAndUpdate(
+      await Product.findOneAndUpdate(
         { _id: id },
-        { $inc: { stock: -1, sold: 1 } }
+        { $inc: { stock: -+quantity, sold: +quantity } }
       );
       await Order.findOneAndUpdate(
         { _id: order._id },
         { $push: { billRaw: currentPrice } }
       );
-
       await Notification.create({
         userId: product.vendorId,
         content: `${
           product.vendorName !== 'JUMIA' ? req.user.name : product.vendorName
         } has ordered ${product.name}`,
       });
-    });
+    }
     res.status(201).json({
       status: 'success',
       data: {
         status: 'Order Created',
-        order: await Order.findById(order._id),
       },
     });
   } catch (err) {
@@ -52,24 +85,12 @@ exports.newOrder = async (req, res, next) => {
 
 exports.getMyOrders = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id)
-      .populate('orders')
-      .populate({
-        path: 'orders',
-        populate: {
-          path: 'products',
-          model: 'Product',
-          populate: {
-            path: 'discount',
-            model: 'Discount',
-          },
-        },
-      });
+    const orders = await User.find({ userId: req.user._id });
     res.status(201).json({
       status: 'success',
       data: {
         status: 'Your orders are here',
-        orders: user.orders,
+        orders,
       },
     });
   } catch (err) {

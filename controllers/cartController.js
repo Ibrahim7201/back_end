@@ -79,49 +79,13 @@ exports.getCartData = async (req, res, next) => {
   }
 };
 
-exports.proceedToCheckout = async (req, res, next) => {
+exports.checkout = async (req, res, next) => {
   try {
     const { items } = await Cart.findOne({ userId: req.user._id });
-    const { vendorName, vendorId, productId, name, quantity, price } = items;
-    const order = await Order.create({
-      paymentMethod,
-      shippingAddress,
-      vendorId,
-      vendorName,
-      products,
-      userId: req.user._id,
-    });
-    await User.findOneAndUpdate(
-      { _id: req.user._id },
-      { $push: { orders: order._id } }
-    );
-    products.forEach(async id => {
-      const { currentPrice } = await Product.findById(id).populate('discount');
-      const product = await Product.findOneAndUpdate(
-        { _id: id },
-        { $inc: { stock: -1, sold: 1 } }
-      );
-      await Order.findOneAndUpdate(
-        { _id: order._id },
-        { $push: { billRaw: currentPrice } }
-      );
-
-      await Notification.create({
-        userId: product.vendorId,
-        content: `${
-          product.vendorName !== 'JUMIA' ? req.user.name : product.vendorName
-        } has ordered ${product.name}`,
-      });
-    });
-
-    res.status(201).json({
-      status: 'success',
-      data: {
-        status: 'Order Created',
-        order: await Order.findById(order._id),
-      },
-    });
+    if (!items) return next(new AppError(`No items in cart`, 422));
+    req.orderItems = items;
+    next();
   } catch (err) {
-    next(new AppError(`Error in Checkout Order`, 422));
+    next(new AppError(`Error in checking out`, 422));
   }
 };
