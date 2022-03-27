@@ -12,6 +12,7 @@ adminRouter
     vendorController.getAllVendors
   )
   .post(authController.protect, adminController.acceptOrder)
-  .put(authController.protect, adminController.getAllPendingOrders);
+  .put(authController.protect, adminController.getAllPendingOrders)
+  .options(authController.protect, vendorController.viewBannedVendors);
 
 module.exports = adminRouter;

@@ -3,7 +3,9 @@ const Order = require('../models/orderModel');
 const AppError = require('../utils/appError');
 exports.getAllVendors = async (req, res, next) => {
   try {
-    const vendors = await Vendor.find({});
+    const vendors = await Vendor.find({})
+      .populate('products')
+      .populate('orders');
     res.status(201).json({
       status: 'success',
       data: {

@@ -4,6 +4,7 @@ const SubCategory = require('../models/subCategoriesModel');
 const Discount = require('../models/discountModel');
 const Vendor = require('../models/vendorModel');
 const Notification = require('../models/notificationModel');
+const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 
 exports.addProduct = async (req, res, next) => {
