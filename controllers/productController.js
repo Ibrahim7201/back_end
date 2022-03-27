@@ -110,11 +110,11 @@ exports.getProductByName = async (req, res, next) => {
 
 exports.addInStock = async (req, res, next) => {
   try {
-    const { name, addInStock } = req.body;
-    let { stock } = await Product.findOne({ name });
+    const { _id, addInStock } = req.body;
+    let { stock } = await Product.findOne({ _id });
     stock += addInStock;
-    await Product.findOneAndUpdate({ name }, { stock });
-    const product = await Product.findOne({ name });
+    await Product.findOneAndUpdate({ _id }, { stock });
+    const product = await Product.findOne({ _id });
 
     res.status(201).json({
       status: 'success',
