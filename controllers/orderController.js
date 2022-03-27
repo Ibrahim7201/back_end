@@ -4,7 +4,6 @@ const OrderItem = require('../models/orderItemModel');
 const Product = require('../models/productsModel');
 const Notification = require('../models/notificationModel');
 const AppError = require('../utils/appError');
-const OrderItem = require('../models/orderItemModel');
 
 exports.newOrder = async (req, res, next) => {
   try {
