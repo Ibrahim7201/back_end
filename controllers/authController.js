@@ -82,7 +82,7 @@ exports.signup = async (req, res, next) => {
       passwordConfirmation,
       passwordChangedAt,
       role,
-      phones,
+      phone,
     } = req.body;
     let toBeSend;
     const cart = await Cart.create({});
@@ -97,7 +97,7 @@ exports.signup = async (req, res, next) => {
         passwordConfirmation,
         passwordChangedAt,
         role,
-        phones,
+        phone,
         cartId: cart._id,
       });
     } else if (role === 'user') {
@@ -110,7 +110,7 @@ exports.signup = async (req, res, next) => {
         passwordConfirmation,
         passwordChangedAt,
         role,
-        phones,
+        phone,
         cartId: cart._id,
       });
     }

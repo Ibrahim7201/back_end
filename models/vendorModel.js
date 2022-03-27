@@ -36,19 +36,7 @@ const vendorSchema = new mongoose.Schema(
         message: 'Passwords are not the same!',
       },
     },
-    phones: [
-      {
-        area: {
-          type: String,
-        },
-        prefix: {
-          type: String,
-        },
-        line: {
-          type: String,
-        },
-      },
-    ],
+    phone: { type: String },
     passwordResetToken: String,
     passwordResetExpires: Date,
     passwordChangedAt: {

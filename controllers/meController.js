@@ -18,12 +18,12 @@ exports.getMyData = async (req, res, next) => {
 
 exports.editMe = async (req, res, next) => {
   try {
-    const { name, photo, address, phones } = req.body;
+    const { name, photo, address, phone } = req.body;
     const updatedUser = await User.findByIdAndUpdate(req.user._id, {
       name,
       photo,
       address,
-      phones,
+      phone,
     });
     res.status(201).json({
       status: 'success',
