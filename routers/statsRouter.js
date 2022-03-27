@@ -14,5 +14,7 @@ statsRouter
     authController.restrictTo('admin'),
     statsController.getAllProducts
   )
-  .post(authController.protect, statsController.queryProductByName);
+  .post(authController.protect, statsController.queryProductByName)
+  .patch(authController.protect, statsController.getTopFiveSoldProducts)
+  .options(authController.protect, statsController.getTopThreeDiscounts);
 module.exports = statsRouter;

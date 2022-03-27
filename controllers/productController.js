@@ -21,10 +21,13 @@ exports.addProduct = async (req, res, next) => {
     const cat = await Category.findOne({ name: category });
     const subcat = await SubCategory.findOne({ name: subCategory });
     let vendorName;
+    let isAccepted;
     if (req.user.role === 'vendor') {
       vendorName = req.user.name;
+      isAccepted = false;
     } else {
       vendorName = 'JUMIA';
+      isAccepted = true;
     }
     const product = await Product.create({
       name,
@@ -37,6 +40,7 @@ exports.addProduct = async (req, res, next) => {
       subCategory: subcat._id,
       vendorName,
       vendorId: req.user._id,
+      isAccepted,
     });
     if (req.user.role === 'vendor')
       await Vendor.findOneAndUpdate(
