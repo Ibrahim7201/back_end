@@ -39,9 +39,8 @@ exports.getAllProducts = async (req, res, next) => {
 };
 exports.queryProductByName = async (req, res, next) => {
   try {
-    const $regex = escapeStringRegexp(`${req.body.name}`);
     const products = await Product.find({
-      name: { $regex, $options: 'i' },
+      name: { $regex: `${req.body.name}`, $options: 'i' },
     });
     if (!products) {
       return next(new AppError('No products found', 404));
