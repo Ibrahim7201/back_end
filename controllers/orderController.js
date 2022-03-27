@@ -1,8 +1,10 @@
 const Order = require('../models/orderModel');
 const User = require('../models/userModel');
+const OrderItem = require('../models/orderItemModel');
 const Product = require('../models/productsModel');
 const Notification = require('../models/notificationModel');
 const AppError = require('../utils/appError');
+const OrderItem = require('../models/orderItemModel');
 
 exports.newOrder = async (req, res, next) => {
   try {
@@ -15,11 +17,18 @@ exports.newOrder = async (req, res, next) => {
           price: el.price,
         };
       });
+      let OrderItemsArray = [];
+      orderItems.forEach(async item => {
+        const OrderItem = await OrderItem.create({
+          ...item,
+        });
+        OrderItemsArray.push(OrderItem._id);
+      });
       const order = await Order.create({
         paymentMethod,
         shippingAddress,
         userId: req.user._id,
-        orderItems,
+        orderItems: OrderItemsArray,
       });
       orderItems.forEach(async item => {
         const product = await Product.findById(item.productId);
@@ -41,16 +50,16 @@ exports.newOrder = async (req, res, next) => {
     } else {
       const product = await Product.findById(productId).populate('discount');
       if (!product) return next(new AppError(`Product Not Found`, 422));
-      const orderItem = {
+      const orderItem = OrderItem.create({
         productId,
         quantity,
         price: product.currentPrice,
-      };
+      });
       const order = await Order.create({
         paymentMethod,
         shippingAddress,
         userId: req.user._id,
-        orderItems: [orderItem],
+        orderItems: [orderItem._id],
       });
       await User.findOneAndUpdate(
         { _id: req.user._id },
@@ -85,7 +94,9 @@ exports.newOrder = async (req, res, next) => {
 
 exports.getMyOrders = async (req, res, next) => {
   try {
-    const orders = await User.find({ userId: req.user._id });
+    const orders = await User.find({ userId: req.user._id }).populate(
+      'orderItems'
+    );
     res.status(201).json({
       status: 'success',
       data: {
