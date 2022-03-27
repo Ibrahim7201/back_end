@@ -8,6 +8,7 @@ const { promisify } = require('util');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 const Vendor = require('../models/vendorModel');
+
 const signToken = (id, isAdmin) => {
   return jwt.sign({ id, isAdmin }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES,
@@ -50,20 +51,22 @@ exports.protect = async (req, res, next) => {
       return next(`User is not logged in please login first`);
     }
     const payLoad = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
     const freshUser = await User.findById(payLoad.id);
     const freshVendor = await Vendor.findById(payLoad.id);
     if (!freshUser && !freshVendor) {
       return next('User belongs to this token no longer exists');
     }
     if (
-      freshUser.changedPasswordAfter(payLoad.iat) ||
-      freshVendor.changedPasswordAfter(payLoad.iat)
+      (freshUser && freshUser.changedPasswordAfter(payLoad.iat)) ||
+      (freshVendor && freshVendor.changedPasswordAfter(payLoad.iat))
     ) {
       return next(`User changed password after the token was issued`);
     }
-    if (freshUser) req.user = freshUser;
-    if (freshVendor) req.user = freshVendor;
+    if (freshUser) {
+      req.user = freshUser;
+    } else if (freshVendor) {
+      req.user = freshVendor;
+    }
     next();
   } catch (err) {
     next(new AppError(`Error in Authentication`, 404));

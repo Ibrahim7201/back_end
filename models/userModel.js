@@ -37,19 +37,7 @@ const userSchema = new mongoose.Schema(
         message: 'Passwords are not the same!',
       },
     },
-    phones: [
-      {
-        area: {
-          type: String,
-        },
-        prefix: {
-          type: String,
-        },
-        line: {
-          type: String,
-        },
-      },
-    ],
+    phones: { type: [String] },
     passwordResetToken: String,
     passwordResetExpires: Date,
     passwordChangedAt: {

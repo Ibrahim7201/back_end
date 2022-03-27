@@ -6,20 +6,23 @@ const orderSchema = new mongoose.Schema(
       street: { type: String },
       suite: { type: String },
     },
+    paymentMethod: {
+      type: String,
+      enum: ['cashondelivery', 'paypal'],
+      default: 'cashondelivery',
+    },
     userId: { type: mongoose.Schema.Types.ObjectId },
-    vendorId: { type: mongoose.Schema.Types.ObjectId },
-    vendorName: { type: String },
+    orderItem: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'OrderItem',
+    },
     createdAt: {
       type: Date,
       default: Date.now(),
     },
-    products: {
-      type: [mongoose.Schema.Types.ObjectId],
-    },
     status: {
       isOnWay: { type: Boolean, default: false },
       isPaid: { type: Boolean, default: false },
-      isCashOnDelivery: { type: Boolean, default: false },
       isDelivered: { type: Boolean, default: false },
       isCancelled: { type: Boolean, default: false },
       isRetrieved: { type: Boolean, default: false },

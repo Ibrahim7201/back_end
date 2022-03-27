@@ -1,4 +1,5 @@
 const Cart = require('../models/cartModel');
+const Order = require('../models/orderModel');
 const Product = require('../models/productsModel');
 exports.addToCart = async (req, res, next) => {
   try {
@@ -75,5 +76,52 @@ exports.getCartData = async (req, res, next) => {
     });
   } catch (err) {
     next(new AppError(`Error in getting cart`, 422));
+  }
+};
+
+exports.proceedToCheckout = async (req, res, next) => {
+  try {
+    const { items } = await Cart.findOne({ userId: req.user._id });
+    const { vendorName, vendorId, productId, name, quantity, price } = items;
+    const order = await Order.create({
+      paymentMethod,
+      shippingAddress,
+      vendorId,
+      vendorName,
+      products,
+      userId: req.user._id,
+    });
+    await User.findOneAndUpdate(
+      { _id: req.user._id },
+      { $push: { orders: order._id } }
+    );
+    products.forEach(async id => {
+      const { currentPrice } = await Product.findById(id).populate('discount');
+      const product = await Product.findOneAndUpdate(
+        { _id: id },
+        { $inc: { stock: -1, sold: 1 } }
+      );
+      await Order.findOneAndUpdate(
+        { _id: order._id },
+        { $push: { billRaw: currentPrice } }
+      );
+
+      await Notification.create({
+        userId: product.vendorId,
+        content: `${
+          product.vendorName !== 'JUMIA' ? req.user.name : product.vendorName
+        } has ordered ${product.name}`,
+      });
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'Order Created',
+        order: await Order.findById(order._id),
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in Checkout Order`, 422));
   }
 };

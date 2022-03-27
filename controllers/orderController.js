@@ -6,10 +6,13 @@ const AppError = require('../utils/appError');
 
 exports.newOrder = async (req, res, next) => {
   try {
-    const { shippingAddress, vendorId, vendorName, products } = req.body;
+    const { shippingAddress, vendorId, vendorName, products, paymentMethod } =
+      req.body;
     const order = await Order.create({
+      paymentMethod,
       shippingAddress,
       vendorId,
+      vendorName,
       products,
       userId: req.user._id,
     });
@@ -35,7 +38,6 @@ exports.newOrder = async (req, res, next) => {
         } has ordered ${product.name}`,
       });
     });
-
     res.status(201).json({
       status: 'success',
       data: {
