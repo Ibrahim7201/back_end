@@ -17,6 +17,5 @@ vendorRouter
     vendorController.toggleBanVendor
   )
   .patch(authController.protect, vendorController.acceptOrder)
-  .post(authController.protect, vendorController.queryVendorsByMail)
-  .options(authController.protect, vendorController.getAllVendors);
+  .post(authController.protect, vendorController.queryVendorsByMail);
 module.exports = vendorRouter;
