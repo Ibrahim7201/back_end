@@ -22,13 +22,7 @@ exports.getCertainVendor = async (req, res, next) => {
     const { id } = req.params;
     const vendor = await Vendor.findById(id)
       .populate('orders')
-      .populate({
-        path: 'orders',
-        populate: {
-          path: 'products',
-          model: 'Product',
-        },
-      });
+      .populate('products');
     if (!vendor) return next(new AppError(`Vendor doesn't exist`, 422));
     res.status(201).json({
       status: 'success',
