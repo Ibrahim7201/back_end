@@ -78,6 +78,7 @@ exports.signup = async (req, res, next) => {
     const {
       name,
       password,
+      address,
       email,
       passwordConfirmation,
       passwordChangedAt,
@@ -94,6 +95,7 @@ exports.signup = async (req, res, next) => {
         name,
         password,
         email,
+        address,
         passwordConfirmation,
         passwordChangedAt,
         role,
@@ -107,6 +109,7 @@ exports.signup = async (req, res, next) => {
         name,
         password,
         email,
+        address,
         passwordConfirmation,
         passwordChangedAt,
         role,

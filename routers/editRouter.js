@@ -10,6 +10,7 @@ editRouter
     authController.restrictTo('admin'),
     editController.editProduct
   )
-  .get(authController.protect, vendorController.getAllVendors);
+  .get(authController.protect, vendorController.getAllVendors)
+  .put(authController.protect, vendorController.viewBannedVendors);
 
 module.exports = editRouter;

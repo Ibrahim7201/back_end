@@ -6,11 +6,7 @@ const authController = require('../controllers/authController');
 vendorRouter
   .route('/:id?')
   .get(authController.protect, vendorController.viewPendingOrders)
-  .put(
-    authController.protect,
-    authController.restrictTo('admin'),
-    vendorController.getCertainVendor
-  )
+  .put(authController.protect, vendorController.getCertainVendor)
   .delete(
     authController.protect,
     authController.restrictTo('admin'),
