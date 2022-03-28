@@ -22,6 +22,10 @@ exports.newOrder = async (req, res, next) => {
           ...item,
         });
         OrderItemsArray.push(OrderItem._id);
+        await Product.findOneAndUpdate(
+          { _id: item.productId },
+          { $push: { orders: OrderItem._id } }
+        );
       });
       const order = await Order.create({
         paymentMethod,
@@ -67,7 +71,10 @@ exports.newOrder = async (req, res, next) => {
       const { currentPrice } = await Product.findById(id).populate('discount');
       await Product.findOneAndUpdate(
         { _id: id },
-        { $inc: { stock: -+quantity, sold: +quantity } }
+        {
+          $inc: { stock: -+quantity, sold: +quantity },
+          $push: { orders: orderItem._id },
+        }
       );
       await Order.findOneAndUpdate(
         { _id: order._id },
@@ -93,9 +100,13 @@ exports.newOrder = async (req, res, next) => {
 
 exports.getMyOrders = async (req, res, next) => {
   try {
-    const orders = await User.find({ userId: req.user._id }).populate(
-      'orderItems'
-    );
+    const orders = await User.find({ userId: req.user._id }).populate({
+      path: 'orderItems',
+      populate: {
+        path: 'productId',
+        model: 'Product',
+      },
+    });
     res.status(201).json({
       status: 'success',
       data: {

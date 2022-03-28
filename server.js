@@ -26,6 +26,7 @@ const adminRouter = require('./routers/adminRouter');
 const notificationRouter = require('./routers/notificationRouter');
 const statsRouter = require('./routers/statsRouter');
 const EditRouter = require('./routers/editRouter');
+const orderstatusRouter = require('./routers/orderstatusRouter');
 const globalError = require('./controllers/errorContoller');
 
 main();
@@ -69,6 +70,7 @@ app.use('/admin', adminRouter);
 app.use('/notificationRouter', notificationRouter);
 app.use('/stats', statsRouter);
 app.use('/edit', EditRouter);
+app.use('/orderstatus', orderstatusRouter);
 
 app.use(globalError);
 app.listen(port, () => {

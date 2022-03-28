@@ -66,6 +66,10 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    orders: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'OrderItem',
+    },
   },
   {
     toJSON: {

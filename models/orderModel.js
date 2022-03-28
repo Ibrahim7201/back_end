@@ -28,7 +28,7 @@ const orderSchema = new mongoose.Schema(
       isPaid: { type: Boolean, default: false },
       isDelivered: { type: Boolean, default: false },
       isCancelled: { type: Boolean, default: false },
-      isRetrieved: { type: Boolean, default: false },
+      isCompleted: { type: Boolean, default: false },
     },
     billRaw: { type: [Number], default: [0] },
   },

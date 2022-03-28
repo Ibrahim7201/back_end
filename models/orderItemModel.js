@@ -10,6 +10,9 @@ const orderItemSchema = new mongoose.Schema({
   },
   quantity: { type: Number, default: 1 }, // default 1
   price: { type: Number, default: 0 }, // default 0
+  status: {
+    isRetrieved: { type: Boolean, default: false },
+  },
 });
 
 const OrderItem = mongoose.model('OrderItem', orderItemSchema);
