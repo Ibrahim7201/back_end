@@ -32,7 +32,9 @@ const globalError = require('./controllers/errorContoller');
 main();
 async function main() {
   try {
-    mongoose.connect(process.env.DATABASE_LOCAL);
+    mongoose.connect(
+      process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD)
+    );
   } catch (err) {
     console.log(err.message);
   }
