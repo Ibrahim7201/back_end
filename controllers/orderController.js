@@ -4,6 +4,7 @@ const OrderItem = require('../models/orderItemModel');
 const Product = require('../models/productsModel');
 const Notification = require('../models/notificationModel');
 const AppError = require('../utils/appError');
+const Cart = require('../models/cartModel');
 
 exports.newOrder = async (req, res, next) => {
   try {
@@ -17,22 +18,30 @@ exports.newOrder = async (req, res, next) => {
         };
       });
       let OrderItemsArray = [];
-      orderItems.forEach(async item => {
+      for (let i in orderItems) {
         const Orderitem = await OrderItem.create({
-          ...item,
+          ...orderItems[i],
         });
         OrderItemsArray.push(Orderitem._id);
         await Product.findOneAndUpdate(
-          { _id: item.productId },
+          { _id: orderItems[i].productId },
           { $push: { orders: Orderitem._id } }
         );
-      });
+      }
       const order = await Order.create({
         paymentMethod,
         shippingAddress,
         userId: req.user._id,
         orderItems: OrderItemsArray,
       });
+      await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { $push: { orders: order._id } }
+      );
+      await Cart.findOneAndUpdate(
+        { userId: req.user._id },
+        { $set: { items: [] } }
+      );
       orderItems.forEach(async item => {
         const product = await Product.findById(item.productId);
         await Product.findOneAndUpdate(
@@ -43,6 +52,7 @@ exports.newOrder = async (req, res, next) => {
           { _id: order._id },
           { $push: { billRaw: item.price } }
         );
+
         await Notification.create({
           userId: product.vendorId,
           content: `${
