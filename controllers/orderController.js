@@ -18,13 +18,13 @@ exports.newOrder = async (req, res, next) => {
       });
       let OrderItemsArray = [];
       orderItems.forEach(async item => {
-        const OrderItem = await OrderItem.create({
+        const Orderitem = await OrderItem.create({
           ...item,
         });
-        OrderItemsArray.push(OrderItem._id);
+        OrderItemsArray.push(Orderitem._id);
         await Product.findOneAndUpdate(
           { _id: item.productId },
-          { $push: { orders: OrderItem._id } }
+          { $push: { orders: Orderitem._id } }
         );
       });
       const order = await Order.create({

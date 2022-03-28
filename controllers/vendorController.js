@@ -28,7 +28,20 @@ exports.getCertainVendor = async (req, res, next) => {
           model: 'Product',
         },
       })
-      .populate('products');
+      .populate({
+        path: 'products',
+        populate: {
+          path: 'subCategory',
+          model: 'SubCategory',
+        },
+      })
+      .populate({
+        path: 'products',
+        populate: {
+          path: 'category',
+          model: 'Category',
+        },
+      });
     if (!vendor) return next(new AppError(`Vendor doesn't exist`, 422));
     res.status(201).json({
       status: 'success',
