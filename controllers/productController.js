@@ -170,3 +170,21 @@ exports.acceptProduct = async (req, res, next) => {
     next(new AppError(`Error in Accepting Order`, 422));
   }
 };
+
+exports.getProductsByName = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    const products = await Product.find({ name }).populate('discount');
+    if (products.length === 0)
+      return next(new AppError(`Product doesn't exist`, 422));
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'Product is Here',
+        products,
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in Finding Products By Name`, 422));
+  }
+};
