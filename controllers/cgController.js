@@ -24,9 +24,7 @@ exports.addCategory = async (req, res, next) => {
 exports.getCategory = async (req, res, next) => {
   try {
     const { name } = req.params;
-    const cg = await Category.findOne({ name }).populate('subCategories', {
-      name: 1,
-    });
+    const cg = await Category.findOne({ name }).populate('subCategories');
     res.status(201).json({
       status: 'success',
       data: {

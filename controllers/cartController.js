@@ -66,7 +66,13 @@ exports.removeFromCart = async (req, res, next) => {
 
 exports.getCartData = async (req, res, next) => {
   try {
-    const cart = await Cart.findOne({ userId: req.user._id });
+    const cart = await Cart.findOne({ userId: req.user._id }).populate({
+      path: 'items',
+      populate: {
+        path: 'productId',
+        model: 'Product',
+      },
+    });
     res.status(201).json({
       status: 'success',
       data: {
