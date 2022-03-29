@@ -53,7 +53,7 @@ app.use(express.static(`${__dirname}/public`));
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('tiny'));
 }
-app.use('/', limiter);
+// app.use('/', limiter);
 
 app.use('/auth', authRouter);
 app.use('/category', cgRouter);

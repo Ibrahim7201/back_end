@@ -7,7 +7,7 @@ cartRouter
   .route('/')
   .post(authController.protect, cartController.addToCart)
   .get(authController.protect, cartController.getCartData)
-  .delete(authController.protect, cartController.removeFromCart)
+  .patch(authController.protect, cartController.removeFromCart)
   .put(
     authController.protect,
     cartController.checkout,

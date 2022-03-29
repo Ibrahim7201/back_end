@@ -7,6 +7,11 @@ orderRouter
   .route('/')
   .post(authController.protect, orderController.newOrder)
   .get(authController.protect, orderController.getMyOrders)
-  .patch(authController.protect, productController.getProductsByName);
+  .patch(authController.protect, productController.getProductsByName)
+  .put(
+    authController.protect,
+    authController.restrictTo('admin'),
+    orderController.getAllProducts
+  );
 
 module.exports = orderRouter;

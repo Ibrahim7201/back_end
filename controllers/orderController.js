@@ -145,3 +145,41 @@ exports.getMyOrders = async (req, res, next) => {
     next(new AppError(`Error in viewing your orders`, 422));
   }
 };
+
+exports.getAllProducts = async (req, res, next) => {
+  try {
+    const orders = await Order.find({})
+      .populate('orderItems')
+      .populate({
+        path: 'orderItems',
+        populate: {
+          path: 'productId',
+          model: 'Product',
+          populate: {
+            path: 'category',
+            model: 'Category',
+          },
+        },
+      })
+      .populate({
+        path: 'orderItems',
+        populate: {
+          path: 'productId',
+          model: 'Product',
+          populate: {
+            path: 'subCategory',
+            model: 'SubCategory',
+          },
+        },
+      });
+    res.status(201).json({
+      status: 'success',
+      data: {
+        status: 'Your orders are here',
+        orders,
+      },
+    });
+  } catch (err) {
+    next(new AppError(`Error in viewing your orders`, 422));
+  }
+};
