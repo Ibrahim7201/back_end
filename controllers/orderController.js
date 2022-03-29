@@ -110,13 +110,30 @@ exports.newOrder = async (req, res, next) => {
 
 exports.getMyOrders = async (req, res, next) => {
   try {
-    const orders = await User.find({ userId: req.user._id }).populate({
-      path: 'orderItems',
-      populate: {
-        path: 'productId',
-        model: 'Product',
-      },
-    });
+    const orders = await Order.find({ userId: req.user._id })
+      .populate('orderItems')
+      .populate({
+        path: 'orderItems',
+        populate: {
+          path: 'productId',
+          model: 'Product',
+          populate: {
+            path: 'category',
+            model: 'Category',
+          },
+        },
+      })
+      .populate({
+        path: 'orderItems',
+        populate: {
+          path: 'productId',
+          model: 'Product',
+          populate: {
+            path: 'subCategory',
+            model: 'SubCategory',
+          },
+        },
+      });
     res.status(201).json({
       status: 'success',
       data: {
